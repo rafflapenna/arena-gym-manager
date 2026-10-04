@@ -1,4 +1,6 @@
-# Gym Manager
+# Arena — Gym Manager
+
+**Il gestionale per palestre multidisciplinari.**
 
 Gestionale web **multi-palestra** per palestre e associazioni sportive multidisciplinari (arti
 marziali, lotta, yoga, MMA…): anagrafica soci, abbonamenti e pagamenti, check-in con QR code,
