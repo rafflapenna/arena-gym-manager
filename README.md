@@ -14,6 +14,28 @@ automatici. È in produzione presso una palestra reale.
 | **Qualità** | 246 test di integrazione con Testcontainers · CI GitHub Actions · load test k6 |
 | **Infrastruttura** | Docker · Caddy (HTTPS) · Cloudflare · Postgres in container con backup notturni |
 
+## Screenshot
+
+*Dati di esempio inventati.*
+
+![Bacheca del gestore](docs/screenshots/dashboard.png)
+
+| Soci | Scheda socio |
+|---|---|
+| ![Elenco soci](docs/screenshots/soci.png) | ![Scheda socio](docs/screenshots/scheda-socio.png) |
+| **Corsi** | **Prove gratuite** |
+| ![Corsi](docs/screenshots/corsi.png) | ![Prove gratuite](docs/screenshots/prove-gratuite.png) |
+
+**Da telefono** — bacheca della reception, area del socio e tessera QR per il check-in:
+
+<p>
+  <img src="docs/screenshots/mobile-dashboard.png" width="250" alt="Bacheca da telefono">
+  <img src="docs/screenshots/mobile-area-socio.png" width="250" alt="Area socio">
+  <img src="docs/screenshots/mobile-tessera-qr.png" width="250" alt="Tessera QR">
+</p>
+
+Altre schermate: [presenze del giorno](docs/screenshots/check-in.png).
+
 ## Funzionalità
 
 **Multi-tenant e ruoli.** Ogni palestra è un tenant isolato. Cinque ruoli con una matrice di
