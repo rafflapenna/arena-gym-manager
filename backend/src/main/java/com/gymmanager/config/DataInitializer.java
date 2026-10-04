@@ -38,7 +38,7 @@ public class DataInitializer implements ApplicationRunner {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
 
-    /** Demo credentials (admin/admin, instructor/instructor, staff/staff123) are seeded
+    /** Demo credentials (admin, instructor, staff — password 1234) are seeded
      *  idempotently at startup when this flag is true. Defaults to false (see application.yml:
      *  APP_SEED_DEMO_USERS) so prod never gets known credentials seeded on a fresh DB; the dev
      *  and test profiles turn it back on. */
@@ -187,9 +187,9 @@ public class DataInitializer implements ApplicationRunner {
         // Username "instructor" is kept as-is on purpose (only its role changed to
         // GYM_MANAGER — roadmap §4); no trainer demo user or courses/disciplines/packages
         // are seeded here since those are per-gym data created by staff, not fixtures.
-        seedUser("admin",      "admin",       "ADMIN",       null,       "Amministratore", "");
-        seedUser("instructor", "instructor",  "GYM_MANAGER", defaultGym, "Istruttore",     "Demo");
-        seedUser("staff",      "staff123",    "STAFF",       defaultGym, "Staff",          "Demo");
+        seedUser("admin",      "1234",        "ADMIN",       null,       "Amministratore", "");
+        seedUser("instructor", "1234",        "GYM_MANAGER", defaultGym, "Istruttore",     "Demo");
+        seedUser("staff",      "1234",        "STAFF",       defaultGym, "Staff",          "Demo");
     }
 
     private void seedUser(String username, String rawPassword, String role, Gym gym,

@@ -15,7 +15,7 @@ import { Rate } from 'k6/metrics';
 
 const BASE = __ENV.BASE_URL || 'http://localhost:8080/api/v1';
 const USER = __ENV.USER || 'staff';
-const PASS = __ENV.PASS || 'staff123';
+const PASS = __ENV.PASS || '1234';
 const PEAK = parseInt(__ENV.PEAK || '800');
 
 const apiErrors = new Rate('api_errors');

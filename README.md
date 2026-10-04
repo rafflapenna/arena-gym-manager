@@ -94,8 +94,8 @@ npm install
 npm run dev          # http://localhost:5173
 ```
 
-Account demo: `admin` / `admin` (amministratore), `instructor` / `instructor` (gestore della
-palestra demo), `staff` / `staff123` (reception).
+Account demo: `admin` / `1234` (amministratore), `instructor` / `1234` (gestore della
+palestra demo), `staff` / `1234` (reception).
 
 Test del backend (Docker deve essere attivo): `cd backend && ./mvnw test`.
 

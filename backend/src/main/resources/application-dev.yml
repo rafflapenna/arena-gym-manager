@@ -25,6 +25,6 @@ logging:
 
 app:
   seed:
-    # Demo accounts (admin/admin, instructor/instructor, staff/staff123) — dev only.
+    # Demo accounts (admin, instructor, staff — password 1234) — dev only.
     # The default profile (used in prod) keeps the property's false default (application.yml).
     demo-users: true

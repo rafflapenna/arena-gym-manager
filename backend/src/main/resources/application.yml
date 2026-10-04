@@ -103,7 +103,7 @@ jwt:
 app:
   url: ${APP_URL:http://localhost:5173}
   seed:
-    # Seeds demo accounts (admin/admin, instructor/instructor, staff/staff123) at startup,
+    # Seeds demo accounts (admin, instructor, staff — password 1234) at startup,
     # idempotently (only if the username doesn't already exist). OFF by default (this is the
     # profile prod runs with — docker-compose.deploy.yml sets no SPRING_PROFILES_ACTIVE) so a
     # fresh deploy never has known credentials. The dev profile turns it back on

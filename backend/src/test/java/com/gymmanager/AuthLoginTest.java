@@ -44,7 +44,7 @@ class AuthLoginTest {
 
     @Test
     void consecutiveLoginsWithinTheCacheTtl_bothSucceed() throws Exception {
-        String body = objectMapper.writeValueAsString(new LoginBody("staff", "staff123"));
+        String body = objectMapper.writeValueAsString(new LoginBody("staff", "1234"));
 
         mockMvc.perform(post("/api/v1/auth/login")
                         .header("X-Forwarded-For", IP)
@@ -69,7 +69,7 @@ class AuthLoginTest {
     void usernameIsCaseInsensitiveAndTrimmed() throws Exception {
         // iOS capitalises the first letter of the username field ("Staff"); copy-paste can
         // add spaces. Both must log into the stored lowercase account.
-        String body = objectMapper.writeValueAsString(new LoginBody("  Staff ", "staff123"));
+        String body = objectMapper.writeValueAsString(new LoginBody("  Staff ", "1234"));
 
         mockMvc.perform(post("/api/v1/auth/login")
                         .header("X-Forwarded-For", IP + "2")
@@ -82,7 +82,7 @@ class AuthLoginTest {
 
     @Test
     void wrongPassword_stillReturns401AfterAPriorSuccessfulLogin() throws Exception {
-        String goodBody = objectMapper.writeValueAsString(new LoginBody("admin", "admin"));
+        String goodBody = objectMapper.writeValueAsString(new LoginBody("admin", "1234"));
         String badBody = objectMapper.writeValueAsString(new LoginBody("admin", "wrong-password"));
 
         mockMvc.perform(post("/api/v1/auth/login")
