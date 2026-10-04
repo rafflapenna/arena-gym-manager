@@ -1,0 +1,20 @@
+/* Google Fonts loads from index.html (preconnect + <link rel="stylesheet">) instead of an
+   @import here: an @import inside the main stylesheet is only discovered once that stylesheet
+   itself has been fetched and parsed, serializing the font request behind it; a <link> in the
+   HTML head is found by the browser's preloader scan immediately. */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Sotto i 768px (dove si naviga col dito, non col mouse) iOS/Safari apre lo zoom automatico
+   su ogni input il cui font-size calcolato è < 16px — capita con tutte le varianti text-sm/
+   text-xs/text-[15px] usate dai componenti ui e dagli input scritti a mano. !important perché
+   deve vincere su qualunque utility di dimensione testo, incluse quelle future. */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}

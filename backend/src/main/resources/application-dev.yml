@@ -1,0 +1,30 @@
+# Development profile: PostgreSQL (same engine as production)
+# Start with: ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+# Start DB with: docker-compose up -d  (from the backend/ directory)
+
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/gymmanager_dev}
+    username: ${DB_USER:gymuser}
+    password: ${DB_PASSWORD:gympass}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+logging:
+  level:
+    com.gymmanager: DEBUG
+    org.hibernate.SQL: DEBUG
+
+app:
+  seed:
+    # Demo accounts (admin/admin, instructor/instructor, staff/staff123) — dev only.
+    # The default profile (used in prod) keeps the property's false default (application.yml).
+    demo-users: true

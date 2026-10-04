@@ -1,0 +1,53 @@
+#!/bin/sh
+# Maven Wrapper — cross-platform (macOS / Linux)
+set -eu
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+WRAPPER_PROPERTIES="$SCRIPT_DIR/.mvn/wrapper/maven-wrapper.properties"
+
+if [ ! -f "$WRAPPER_PROPERTIES" ]; then
+  echo "Cannot find: $WRAPPER_PROPERTIES" >&2
+  exit 1
+fi
+
+# Read distribution URL and version from properties
+DISTRIBUTION_URL=$(grep -E '^distributionUrl=' "$WRAPPER_PROPERTIES" | cut -d= -f2-)
+DISTRIBUTION_VERSION=$(basename "$DISTRIBUTION_URL" -bin.zip | sed 's/apache-maven-//')
+
+DISTS_DIR="${HOME}/.m2/wrapper/dists/apache-maven-${DISTRIBUTION_VERSION}"
+
+# Search for an already-installed Maven binary using find (avoids glob issues)
+MAVEN_BIN=""
+if [ -d "$DISTS_DIR" ]; then
+  MAVEN_BIN=$(find "$DISTS_DIR" -name "mvn" -path "*/bin/mvn" -type f 2>/dev/null | head -1)
+fi
+
+# Download and install if not found
+if [ -z "$MAVEN_BIN" ]; then
+  echo "Downloading Apache Maven ${DISTRIBUTION_VERSION}..." >&2
+
+  if command -v curl > /dev/null 2>&1; then
+    DL_CMD="curl -fsSL -o"
+  elif command -v wget > /dev/null 2>&1; then
+    DL_CMD="wget -q -O"
+  else
+    echo "Error: curl or wget is required." >&2
+    exit 1
+  fi
+
+  TMP_DIR=$(mktemp -d)
+  ZIP_FILE="$TMP_DIR/maven.zip"
+  $DL_CMD "$ZIP_FILE" "$DISTRIBUTION_URL"
+
+  INSTALL_DIR="$DISTS_DIR/local"
+  mkdir -p "$INSTALL_DIR"
+  unzip -qq "$ZIP_FILE" -d "$TMP_DIR/extracted"
+  cp -r "$TMP_DIR/extracted/apache-maven-${DISTRIBUTION_VERSION}/." "$INSTALL_DIR/"
+  rm -rf "$TMP_DIR"
+
+  MAVEN_BIN="$INSTALL_DIR/bin/mvn"
+  chmod +x "$MAVEN_BIN"
+  echo "Maven ${DISTRIBUTION_VERSION} installed." >&2
+fi
+
+exec "$MAVEN_BIN" "$@"

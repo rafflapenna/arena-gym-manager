@@ -1,0 +1,153 @@
+spring:
+  application:
+    name: gym-manager
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/gymmanager}
+    username: ${DB_USER:gymuser}
+    password: ${DB_PASSWORD:gympass}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      # 20 connections: safe for a single-instance backend against Neon (free tier allows ~100,
+      # paid starters typically 200+). Leaves headroom if Neon limits are tightened or a second
+      # instance is added in future. Override via HIKARI_MAX_POOL_SIZE.
+      maximum-pool-size: ${HIKARI_MAX_POOL_SIZE:20}
+      # 0 idle connections: lets the Neon compute fully "scale to zero" when the gym is closed
+      # (Neon suspends after ~5 min idle). A warm pool would keep waking it and defeat the cost
+      # savings. The pool still scales up to maximum-pool-size under load. Override via
+      # HIKARI_MIN_IDLE (set >0 only if scale-to-zero is disabled and you want warm connections).
+      minimum-idle: ${HIKARI_MIN_IDLE:0}
+      # Thread waits up to 30 s for a connection before failing with a timeout exception.
+      connection-timeout: ${HIKARI_CONNECTION_TIMEOUT:30000}
+      # Retire connections after 30 min. Neon may drop idle TCP connections; staying well below
+      # any cloud-side idle timeout prevents "connection closed unexpectedly" errors.
+      max-lifetime: ${HIKARI_MAX_LIFETIME:1800000}
+
+  sql:
+    init:
+      mode: always
+      # schema.sql runs before Hibernate creates tables (defer=false, intentional so the
+      # idempotent ALTERs patch existing non-empty prod tables). On a fresh DB (tests) the
+      # CREATE INDEX statements can't guard against a missing table the way ALTER ... IF EXISTS
+      # does, so let init continue past them; Hibernate then builds the schema. In prod the
+      # tables already exist, so the indexes are created normally.
+      continue-on-error: true
+
+  jpa:
+    defer-datasource-initialization: false
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      # Overridable so the local docker-compose can point at Mailpit (no auth, no TLS).
+      mail.smtp.auth: ${MAIL_SMTP_AUTH:true}
+      mail.smtp.starttls.enable: ${MAIL_SMTP_STARTTLS:true}
+
+  servlet:
+    multipart:
+      max-file-size: ${MAX_UPLOAD_FILE_SIZE:10MB}
+      max-request-size: ${MAX_UPLOAD_REQUEST_SIZE:12MB}
+
+  task:
+    scheduling:
+      pool:
+        # >1 so the nightly reminder producers (renewal/cert/fee, all around 01:00-01:45)
+        # never block EmailOutboxDrainJob's every-60s run (default pool size is 1, serial).
+        size: ${SCHEDULING_POOL_SIZE:3}
+
+server:
+  port: 8080
+  tomcat:
+    threads:
+      # Explicit default (same as Spring Boot's built-in default = 200). Raise via
+      # TOMCAT_THREADS_MAX if sustained concurrency exceeds ~150 active requests.
+      max: ${TOMCAT_THREADS_MAX:200}
+    # Requests queued while all threads are busy before the server starts rejecting with 503.
+    accept-count: ${TOMCAT_ACCEPT_COUNT:100}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      # Anonymous callers (the public /actuator/health) see only UP/DOWN; the
+      # component details (DB, disk, paths) are shown only to authenticated users.
+      show-details: when-authorized
+  health:
+    # Mail SMTP is optional (only needed for member invites); don't fail health when unconfigured.
+    mail:
+      enabled: ${MANAGEMENT_HEALTH_MAIL_ENABLED:false}
+
+logging:
+  level:
+    com.gymmanager: INFO
+    org.hibernate.SQL: WARN
+
+jwt:
+  # No built-in default: the app fails fast at startup if JWT_SECRET is not set
+  # (see JwtUtil). Provide a strong, unique base64 secret via the environment.
+  secret: ${JWT_SECRET:}
+
+app:
+  url: ${APP_URL:http://localhost:5173}
+  seed:
+    # Seeds demo accounts (admin/admin, instructor/instructor, staff/staff123) at startup,
+    # idempotently (only if the username doesn't already exist). OFF by default (this is the
+    # profile prod runs with — docker-compose.deploy.yml sets no SPRING_PROFILES_ACTIVE) so a
+    # fresh deploy never has known credentials. The dev profile turns it back on
+    # (application-dev.yml); tests turn it back on too (application-test.yml), since several
+    # integration tests log in as the seeded demo users. Set APP_SEED_DEMO_USERS=true to
+    # re-enable elsewhere. NOTE: flipping this does NOT remove or reset accounts already
+    # seeded in an existing DB — see roadmap for deactivating any that already exist in prod.
+    demo-users: ${APP_SEED_DEMO_USERS:false}
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:4200,http://localhost:5173}
+  mail:
+    from: ${APP_MAIL_FROM:}
+    from-name: ${APP_MAIL_FROM_NAME:Gym Manager}
+    outbox:
+      # Max rows claimed per drain cycle (further capped by the remaining daily-cap budget).
+      batch-size: ${MAIL_OUTBOX_BATCH_SIZE:20}
+      # How often EmailOutboxDrainJob runs.
+      drain-fixed-delay-ms: ${MAIL_OUTBOX_DRAIN_FIXED_DELAY_MS:60000}
+      # Pause between two sends in the same batch — a courtesy to the SMTP server, not a
+      # rate-limit mechanism (the daily cap is what protects the shared Brevo quota).
+      send-delay-ms: ${MAIL_OUTBOX_SEND_DELAY_MS:200}
+      # Brevo free plan's account-wide daily send limit, shared by every gym. Checked against
+      # today's SENT count before each claim, priority TRANSACTIONAL > REMINDER > MARKETING.
+      daily-cap: ${MAIL_OUTBOX_DAILY_CAP:280}
+      # A row stuck in SENDING this long (process crashed mid-send) is handed back to PENDING.
+      stale-sending-minutes: ${MAIL_OUTBOX_STALE_SENDING_MINUTES:10}
+      # Transient failures retried with backoff (1m, 5m, 30m, 2h, 12h); FAILED after this many.
+      max-attempts: ${MAIL_OUTBOX_MAX_ATTEMPTS:5}
+  storage:
+    # "postgres-blob" (default) stores document files as a Postgres BLOB (member_document_blobs).
+    provider: ${STORAGE_PROVIDER:postgres-blob}
+  document:
+    medical-cert:
+      # Comma-separated days-before-expiry thresholds; a reminder email is queued once per
+      # threshold per certificate (see MedicalCertReminderJob).
+      reminder-days: ${MEDICAL_CERT_REMINDER_DAYS:30,7}
+  subscription:
+    renewal:
+      enabled: ${SUBSCRIPTION_RENEWAL_REMINDERS_ENABLED:true}
+      # Comma-separated days-before-expiry thresholds (see SubscriptionRenewalReminderJob).
+      days: ${SUBSCRIPTION_RENEWAL_REMINDER_DAYS:7,1}
+      cron: ${SUBSCRIPTION_RENEWAL_REMINDER_CRON:0 15 1 * * *}
+  fee:
+    reminder-enabled: ${FEE_REMINDER_ENABLED:true}
+    # Comma-separated days-before-expiry thresholds (see FeeReminderJob).
+    reminder-days: ${FEE_REMINDER_DAYS:30,7}
+    reminder-cron: ${FEE_REMINDER_CRON:0 45 1 * * *}

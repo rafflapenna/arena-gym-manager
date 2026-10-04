@@ -1,0 +1,24 @@
+# Test profile: PostgreSQL container managed by @Container + @ServiceConnection
+# DataSource is auto-configured by Spring Boot from the running container
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+logging:
+  level:
+    "[com.gymmanager]": DEBUG
+    "[org.hibernate.SQL]": DEBUG
+
+app:
+  mail:
+    outbox:
+      # Push the real @Scheduled trigger out to effectively "never" — tests call
+      # EmailOutboxDrainJob#drain() directly and must not race a background run.
+      drain-fixed-delay-ms: 3600000

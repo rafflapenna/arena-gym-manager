@@ -1,0 +1,62 @@
+services:
+
+  # ── Development database ───────────────────────────────────────────
+  postgres-dev:
+    image: postgres:16-alpine
+    container_name: gymmanager-db-dev
+    env_file: .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB_DEV}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB_DEV}"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ── Backend (dev) ─────────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gymmanager-backend
+    env_file: .env
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DB_URL: jdbc:postgresql://postgres-dev:5432/${POSTGRES_DB_DEV}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      # Every email goes to Mailpit (UI: http://localhost:8025), never to a real SMTP server.
+      MAIL_HOST: mailpit
+      MAIL_PORT: "1025"
+      MAIL_USERNAME: ""
+      MAIL_PASSWORD: ""
+      MAIL_SMTP_AUTH: "false"
+      MAIL_SMTP_STARTTLS: "false"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres-dev:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    restart: unless-stopped
+
+  # ── Fake SMTP for dev: catches every email, shows them at http://localhost:8025 ──
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: gymmanager-mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    restart: unless-stopped
+
+volumes:
+  postgres_dev_data:

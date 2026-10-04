@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0b0d" />
+    <title>Gym Manager</title>
+
+    <!-- PWA: un solo manifest, niente service worker — i dati sono sempre live.
+         .json invece di .webmanifest: sull'host di produzione (Caddy sul mapping MIME di Go/
+         del sistema) .json è riconosciuto ovunque come application/json senza bisogno di
+         configurazione extra, mentre il supporto di .webmanifest dipende dal file mime.types
+         del sistema operativo della VM. -->
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Gym Manager" />
+
+    <!-- Google Fonts: preconnect + <link> (scoperti subito dallo scanner dell'HTML) invece di
+         un @import dentro il CSS, che resta nascosto finché il foglio di stile principale non è
+         stato scaricato e letto — vedi src/index.css. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Syne:wght@400;500;600;700;800&display=swap"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

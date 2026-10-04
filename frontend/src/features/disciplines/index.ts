@@ -1,0 +1,1 @@
+export { DisciplineSelect } from './DisciplineSelect';
